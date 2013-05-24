@@ -1,0 +1,34 @@
+#!/usr/bin/expect
+
+if { [array names env TWOFACTOR_SECRET_PATH] != "" } {
+	set expanded_secret_path [glob $env(TWOFACTOR_SECRET_PATH)]
+	set secret [exec sed -n /^secret=/s///p $expanded_secret_path]
+} else {
+	set secret $env(TWOFACTOR_SECRET)
+}
+
+set token [exec oathtool --totp --base32 $secret]
+
+log_user 0
+
+stty raw
+stty -echo
+# LogLevel=QUIET suppresses ssh's 'Connection to HOST closed.' output.
+spawn -noecho -nottyinit ssh -o LogLevel=QUIET \
+	-o NumberOfPasswordPrompts=1 -o StrictHostKeyChecking=no {*}$argv
+stty -raw
+stty echo
+
+expect {
+	-re "\[Pp\]assword:\\s*" {
+		send "$env(TWOFACTOR_PASSWORD)\n"
+		exp_continue
+	} -re "Verification code:\\s*" {
+		send "$token\n"
+		expect "\n"
+	}
+}
+
+interact
+catch wait result
+exit [lindex $result 3]

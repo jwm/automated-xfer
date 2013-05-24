@@ -1,0 +1,31 @@
+#!/bin/sh
+
+. ./automated-transfer.conf
+
+if [ -z "$FROM" ] || [ -z "$TO" ]; then
+	echo "$(basename "$0"): FROM and TO must be set in automated-transfer.conf." 1>&2
+	exit 1
+fi
+
+if [ -n "$SECRET" ]; then
+	export TWOFACTOR_SECRET="$SECRET"
+elif [ -n "$SECRET_PATH" ]; then
+	export TWOFACTOR_SECRET_PATH="$SECRET_PATH"
+else
+	echo "$(basename "$0"): SECRET or SECRET_PATH must be set in automated-transfer.conf." 1>&2
+	exit 1
+fi
+
+if [ -z "$USER" ]; then
+	echo "$(basename "$0"): USER must be set in automated-transfer.conf." 1>&2
+	exit 1
+fi
+
+if [ -z "$PASSWORD" ]; then
+	echo "$(basename "$0"): PASSWORD must be set in automated-transfer.conf." 1>&2
+	exit 1
+fi
+export TWOFACTOR_PASSWORD="$PASSWORD"
+
+rsync -e ./twofactor-wrapper -a --partial --progress "$FROM" "$USER@$TO:" \
+	>>automated-transfer.log
