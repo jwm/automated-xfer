@@ -107,3 +107,8 @@ export PATH="$PATH:$(dirname "$0")"
 # will do unseemly things to the binary protocol being used by rsync.
 LANG=en_US rsync -e twofactor-wrapper -avv --partial "$FROM" "$USER@$TO" \
 	>>"$state_files_base.log"
+
+sleep "${REUSE_INTERVAL:-0}"
+to_host=${TO%%:*}
+to_path=${TO#*:}
+twofactor-wrapper "$USER@$to_host" bash -c "date >\"$to_path/last-xfer\""
