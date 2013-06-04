@@ -32,5 +32,7 @@ if [ "${TO#*:}" = "$TO" ]; then
 	TO="$TO:"
 fi
 
-rsync -e ./twofactor-wrapper -a --partial "$FROM" "$USER@$TO" \
+# A neutral, non-UTF8 $LANG like en_US is critical here, or expect's TTYs
+# will do unseemly things to the binary protocol being used by rsync.
+LANG=en_US rsync -e ./twofactor-wrapper -a --partial "$FROM" "$USER@$TO" \
 	>>automated-transfer.log
