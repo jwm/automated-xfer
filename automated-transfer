@@ -25,7 +25,6 @@ already_running()
 		return 0
 	fi
 	set +o noclobber
-	trap "rm -f \"$pid_filename\"" EXIT
 
 	return 1
 }
@@ -93,6 +92,7 @@ if pid=$(already_running "$state_files_base.pid"); then
 	echo "Another $progname is already running as PID $pid, exiting this new invocation..."
 	exit 1
 fi
+trap 'rm -f "$state_files_base.pid"' EXIT
 
 # If there's no colon, it must be a bare hostname. Add a trailing colon.
 if [ "${TO#*:}" = "$TO" ]; then
