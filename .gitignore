@@ -1,2 +1,3 @@
-automated-transfer.conf
-automated-transfer.log
+*.conf
+*.log
+*.pid

@@ -1,6 +1,65 @@
 #!/bin/sh
 
-. ./automated-transfer.conf
+set -e
+
+already_running()
+{
+	local pid_filename=$1
+	shift
+
+	local pid
+
+	if [ -e "$pid_filename" ]; then
+		read pid <"$pid_filename"
+		if kill -0 "$pid"; then
+			echo "$pid"
+			return 0
+		fi
+
+		rm -f "$pid_filename"
+	fi
+	set -o noclobber
+	if ! echo "$$" >"$pid_filename"; then
+		read pid <"$pid_filename"
+		echo "$pid"
+		return 0
+	fi
+	set +o noclobber
+	trap "rm -f \"$pid_filename\"" EXIT
+
+	return 1
+}
+
+progname="$(basename "$0")"
+usage="Usage: $progname [-c CONFIG_FILE] [-h]"
+
+config_file=./automated-transfer.conf
+OPTIND=1
+while getopts :c:h opt; do
+	case $opt in
+	c)
+		config_file="$OPTARG"
+
+		# Add a leading './' if the config file isn't an absolute
+		# path, so '. $config_file' can source it later on.
+		if [ "${config_file#/}" = "$config_file" ]; then
+			config_file="./$config_file"
+		fi
+		;;
+	h)
+		echo "$usage"
+		exit 0
+		;;
+	esac
+done
+shift $(($OPTIND - 1))
+
+if [ $# -gt 0 ]; then
+	echo "$usage"
+	exit 1
+fi
+
+. "$config_file"
 
 if [ -z "$FROM" ] || [ -z "$TO" ]; then
 	echo "$(basename "$0"): FROM and TO must be set in automated-transfer.conf." 1>&2
@@ -27,6 +86,14 @@ if [ -z "$PASSWORD" ]; then
 fi
 export TWOFACTOR_PASSWORD="$PASSWORD"
 
+state_files_base="$config_file"
+state_files_base="${state_files_base%.conf}"
+
+if pid=$(already_running "$state_files_base.pid"); then
+	echo "Another $progname is already running as PID $pid, exiting this new invocation..."
+	exit 1
+fi
+
 # If there's no colon, it must be a bare hostname. Add a trailing colon.
 if [ "${TO#*:}" = "$TO" ]; then
 	TO="$TO:"
@@ -35,4 +102,4 @@ fi
 # A neutral, non-UTF8 $LANG like en_US is critical here, or expect's TTYs
 # will do unseemly things to the binary protocol being used by rsync.
 LANG=en_US rsync -e ./twofactor-wrapper -avv --partial "$FROM" "$USER@$TO" \
-	>>automated-transfer.log
+	>>"$state_files_base.log"
