@@ -27,5 +27,10 @@ if [ -z "$PASSWORD" ]; then
 fi
 export TWOFACTOR_PASSWORD="$PASSWORD"
 
-rsync -e ./twofactor-wrapper -a --partial --progress "$FROM" "$USER@$TO:" \
+# If there's no colon, it must be a bare hostname. Add a trailing colon.
+if [ "${TO#*:}" = "$TO" ]; then
+	TO="$TO:"
+fi
+
+rsync -e ./twofactor-wrapper -a --partial --progress "$FROM" "$USER@$TO" \
 	>>automated-transfer.log
