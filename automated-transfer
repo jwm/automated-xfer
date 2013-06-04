@@ -99,7 +99,11 @@ if [ "${TO#*:}" = "$TO" ]; then
 	TO="$TO:"
 fi
 
+# The two-factor wrapper might not be in $PATH, but it might be in the same
+# directory as this script.
+export PATH="$PATH:$(dirname "$0")"
+
 # A neutral, non-UTF8 $LANG like en_US is critical here, or expect's TTYs
 # will do unseemly things to the binary protocol being used by rsync.
-LANG=en_US rsync -e ./twofactor-wrapper -avv --partial "$FROM" "$USER@$TO" \
+LANG=en_US rsync -e twofactor-wrapper -avv --partial "$FROM" "$USER@$TO" \
 	>>"$state_files_base.log"
