@@ -47,7 +47,7 @@ usage="Usage: $progname [-c CONFIG_FILE] [-h] [-v]"
 config_file=./automated-transfer.conf
 verbose=0
 OPTIND=1
-while getopts :c:h opt; do
+while getopts :c:hv opt; do
 	case $opt in
 	c)
 		config_file="$OPTARG"
