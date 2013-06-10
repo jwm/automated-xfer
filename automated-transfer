@@ -29,10 +29,23 @@ already_running()
 	return 1
 }
 
+do_rsync()
+{
+	local from=$1
+	shift
+
+	local to=$1
+	shift
+
+	LANG=en_US rsync -e twofactor-wrapper -avv --partial "$@" \
+		"$from" "$to"
+}
+
 progname="$(basename "$0")"
-usage="Usage: $progname [-c CONFIG_FILE] [-h]"
+usage="Usage: $progname [-c CONFIG_FILE] [-h] [-v]"
 
 config_file=./automated-transfer.conf
+verbose=0
 OPTIND=1
 while getopts :c:h opt; do
 	case $opt in
@@ -48,6 +61,9 @@ while getopts :c:h opt; do
 	h)
 		echo "$usage"
 		exit 0
+		;;
+	v)
+		verbose=1
 		;;
 	esac
 done
@@ -105,8 +121,11 @@ export PATH="$PATH:$(dirname "$0")"
 
 # A neutral, non-UTF8 $LANG like en_US is critical here, or expect's TTYs
 # will do unseemly things to the binary protocol being used by rsync.
-LANG=en_US rsync -e twofactor-wrapper -avv --partial "$FROM" "$USER@$TO" \
-	>>"$state_files_base.log"
+if [ $verbose -eq 0 ]; then
+	do_rsync "$FROM" "$USER@$TO" >>"$state_files_base.log"
+else
+	do_rsync "$FROM" "$USER@$TO" --progress
+fi
 
 sleep "${REUSE_INTERVAL:-0}"
 to_host=${TO%%:*}
