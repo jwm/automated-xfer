@@ -119,6 +119,8 @@ fi
 # directory as this script.
 export PATH="$PATH:$(dirname "$0")"
 
+echo "Starting transfer ($config_file) at $(date)" >>"$state_files_base.log"
+
 # A neutral, non-UTF8 $LANG like en_US is critical here, or expect's TTYs
 # will do unseemly things to the binary protocol being used by rsync.
 if [ $verbose -eq 0 ]; then
