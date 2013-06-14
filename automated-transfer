@@ -132,4 +132,9 @@ fi
 sleep "${REUSE_INTERVAL:-0}"
 to_host=${TO%%:*}
 to_path=${TO#*:}
-twofactor-wrapper "$USER@$to_host" bash -c "date >\"$to_path/last-xfer\""
+# Insert a slash between $to_path and last-xfer, but only if we have an
+# actual destination path (TO == 'host:path' instead of TO == 'host:')
+if [ -n "$to_path" ]; then
+	to_path="$to_path/"
+fi
+twofactor-wrapper "$USER@$to_host" bash -c "date >\"${to_path}last-xfer\""
