@@ -121,9 +121,10 @@ echo "Starting transfer ($config_file) at $(date)" >>"$state_files_base.log"
 # A neutral, non-UTF8 $LANG like en_US is critical here, or expect's TTYs
 # will do unseemly things to the binary protocol being used by rsync.
 if [ $verbose -eq 0 ]; then
-	do_rsync -avv --partial "$FROM" "$USER@$TO" >>"$state_files_base.log"
+	do_rsync -avv --partial $RSYNC_EXTRA_OPTS "$FROM" "$USER@$TO" \
+		>>"$state_files_base.log"
 else
-	do_rsync -avv --partial --progress "$FROM" "$USER@$TO"
+	do_rsync -avv --partial --progress $RSYNC_EXTRA_OPTS "$FROM" "$USER@$TO"
 fi
 
 sleep "${REUSE_INTERVAL:-0}"
