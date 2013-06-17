@@ -127,4 +127,4 @@ fi
 sleep "${REUSE_INTERVAL:-0}"
 date >"$state_files_base.last-xfer"
 do_rsync -a --partial "$state_files_base.log" "$state_files_base.last-xfer" \
-	"$USER@$TO"
+	$RSYNC_OTHER_LOGS "$USER@$TO"
