@@ -128,6 +128,9 @@ else
 fi
 
 sleep "${REUSE_INTERVAL:-0}"
+do_rsync -a --partial "$state_files_base.log" "$USER@$TO"
+
+sleep "${REUSE_INTERVAL:-0}"
 to_host=${TO%%:*}
 to_path=${TO#*:}
 # Insert a slash between $to_path and last-xfer, but only if we have an
