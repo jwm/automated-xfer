@@ -36,6 +36,6 @@ expect {
 	}
 }
 
-interact
+interact -nobuffer
 catch wait result
 exit [lindex $result 3]
