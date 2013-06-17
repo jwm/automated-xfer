@@ -31,11 +31,7 @@ already_running()
 
 do_rsync()
 {
-	if uname -s | fgrep -qi cygwin; then
-		rsync-wrapper rsync "$@"
-	else
-		LANG=en_US rsync -e twofactor-wrapper "$@"
-	fi
+	twofactor-wrapper rsync "$@"
 }
 
 progname="$(basename "$0")"
@@ -127,15 +123,8 @@ else
 	do_rsync -avv --partial --progress $RSYNC_EXTRA_OPTS "$FROM" "$USER@$TO"
 fi
 
+# Copy the logs and a timestamp file to the remote host.
 sleep "${REUSE_INTERVAL:-0}"
-do_rsync -a --partial "$state_files_base.log" "$USER@$TO"
-
-sleep "${REUSE_INTERVAL:-0}"
-to_host=${TO%%:*}
-to_path=${TO#*:}
-# Insert a slash between $to_path and last-xfer, but only if we have an
-# actual destination path (TO == 'host:path' instead of TO == 'host:')
-if [ -n "$to_path" ]; then
-	to_path="$to_path/"
-fi
-twofactor-wrapper "$USER@$to_host" bash -c "date >\"${to_path}last-xfer\""
+date >"$state_files_base.last-xfer"
+do_rsync -a --partial "$state_files_base.log" "$state_files_base.last-xfer" \
+	"$USER@$TO"
