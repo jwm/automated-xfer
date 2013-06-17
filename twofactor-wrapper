@@ -11,6 +11,13 @@ set token [exec oathtool --totp --base32 $secret]
 
 log_user 0
 
+# Non-blocking mode on stdin makes this not choke on certain datasets and/or
+# network environments. I'm not sure what the root cause, but copious
+# flailing led to this empirical evidence. :-) While we're in here, we'll
+# make stdout non-blocking too, as a hedge.
+fconfigure stdin -blocking 0
+fconfigure stdout -blocking 0
+
 stty raw
 stty -echo
 # LogLevel=QUIET suppresses ssh's 'Connection to HOST closed.' output.
