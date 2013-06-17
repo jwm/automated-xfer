@@ -31,7 +31,11 @@ already_running()
 
 do_rsync()
 {
-	LANG=en_US rsync -e twofactor-wrapper "$@"
+	if uname -s | fgrep -qi cygwin; then
+		rsync-wrapper rsync "$@"
+	else
+		LANG=en_US rsync -e twofactor-wrapper "$@"
+	fi
 }
 
 progname="$(basename "$0")"
