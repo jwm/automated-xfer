@@ -124,7 +124,7 @@ else
 fi
 
 # Copy the logs and a timestamp file to the remote host.
-sleep "${REUSE_INTERVAL:-0}"
+sleep "${REUSE_INTERVAL:-30}"
 date >"$state_files_base.last-xfer"
 do_rsync -a --partial "$state_files_base.log" "$state_files_base.last-xfer" \
 	$RSYNC_OTHER_LOGS "$USER@$TO"
