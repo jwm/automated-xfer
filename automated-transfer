@@ -160,7 +160,7 @@ fi
 # Copy the logs and a timestamp file to the remote host.
 date >"$state_files_base.last-xfer"
 rotate_if_larger "$state_files_base.log" \
-	"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))" "${KEEP_LOGS:-5}"
+	"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))}" "${KEEP_LOGS:-5}"
 sleep "${REUSE_INTERVAL:-30}"
 
 # Let RSYNC_OTHER_LOGS be relative to the installation directory.
