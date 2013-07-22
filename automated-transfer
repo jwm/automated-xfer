@@ -165,5 +165,25 @@ sleep "${REUSE_INTERVAL:-30}"
 
 # Let RSYNC_OTHER_LOGS be relative to the installation directory.
 cd "$progdir"
-do_rsync -a --partial "$state_files_base.log*" "$state_files_base.last-xfer" \
-	$RSYNC_OTHER_LOGS "$USER@$TO"
+
+case $ROTATE_OTHER_LOGS in
+1|yes|YES|Yes|true|TRUE|True)
+	for log in $RSYNC_OTHER_LOGS; do
+		rotate_if_larger "$log" \
+			"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))" "${KEEP_LOGS:-5}"
+	done
+	other_logs="$log $log.*"
+	;;
+*)
+	other_logs=''
+	for log in $RSYNC_OTHER_LOGS; do
+		if [ -z "$other_logs" ]; then
+			other_logs=$log
+		else
+			other_logs="$other_logs $log"
+		fi
+	done
+done
+
+do_rsync -a --partial "$state_files_base.log" "$state_files_base.log."* \
+	"$state_files_base.last-xfer" $other_logs "$USER@$TO"
