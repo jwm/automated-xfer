@@ -166,13 +166,26 @@ sleep "${REUSE_INTERVAL:-30}"
 # Let RSYNC_OTHER_LOGS be relative to the installation directory.
 cd "$progdir"
 
+logs_to_copy="$state_files_base.log"
+for i in $(seq 1 ${KEEP_LOGS:-5}); do
+	if [ -e "$state_files_base.log.$i"]; then
+		logs_to_copy="$logs_to_copy $state_files_base.log.$i"
+	fi
+done
+
 case $ROTATE_OTHER_LOGS in
 1|yes|YES|Yes|true|TRUE|True)
 	for log in $RSYNC_OTHER_LOGS; do
 		rotate_if_larger "$log" \
 			"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))}" "${KEEP_LOGS:-5}"
 	done
-	other_logs="$log $log.[1-${KEEP_LOGS:-5}]"
+
+	other_logs="$log"
+	for i in $(seq 1 ${KEEP_LOGS:-5}); do
+		if [ -e "$log.$i" ]; then
+			other_logs="$other_logs $log.$i"
+		fi
+	done
 	;;
 *)
 	other_logs=''
@@ -186,6 +199,5 @@ case $ROTATE_OTHER_LOGS in
 	;;
 esac
 
-do_rsync -a --partial \
-	"$state_files_base.log" "$state_files_base.log."[1-${KEEP_LOGS:-5}] \
-	"$state_files_base.last-xfer" $other_logs "$USER@$TO"
+do_rsync -a --partial "$logs_to_copy" "$state_files_base.last-xfer" \
+	$other_logs "$USER@$TO"
