@@ -34,6 +34,39 @@ do_rsync()
 	twofactor-wrapper rsync "$@"
 }
 
+rotate_if_larger()
+{
+	local file=$1
+	shift
+
+	local threshold=$1
+	shift
+
+	local keep_logs=$1
+	shift
+
+	if [ ! -e "$file" ]; then
+		return 0
+	fi
+
+	if ! size=$(stat -c %s "$file"); then
+		return 1
+	fi
+	if [ "$size" -gt "$threshold" ]; then
+		# Remove the oldest log file.
+		rm "$file.$keep_logs"
+
+		# Move the next-oldest file to the oldest file, and so on
+		# down the line.
+		for i in $(seq "$(($keep_logs - 1))" 1); do
+			mv "$file.$i" "$file.$(($i + 1))"
+		done
+
+		# Move the current log file to the first rotated log file.
+		mv "$file" "$file.1"
+	fi
+}
+
 progdir="$(dirname "$0")"
 progname="$(basename "$0")"
 usage="Usage: $progname [-c CONFIG_FILE] [-h] [-v]"
@@ -125,10 +158,12 @@ else
 fi
 
 # Copy the logs and a timestamp file to the remote host.
-sleep "${REUSE_INTERVAL:-30}"
 date >"$state_files_base.last-xfer"
+rotate_if_larger "$state_files_base.log" \
+	"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))" "${KEEP_LOGS:-5}"
+sleep "${REUSE_INTERVAL:-30}"
 
 # Let RSYNC_OTHER_LOGS be relative to the installation directory.
 cd "$progdir"
-do_rsync -a --partial "$state_files_base.log" "$state_files_base.last-xfer" \
+do_rsync -a --partial "$state_files_base.log*" "$state_files_base.last-xfer" \
 	$RSYNC_OTHER_LOGS "$USER@$TO"
