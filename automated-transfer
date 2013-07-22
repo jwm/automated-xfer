@@ -34,6 +34,7 @@ do_rsync()
 	twofactor-wrapper rsync "$@"
 }
 
+progdir="$(dirname "$0")"
 progname="$(basename "$0")"
 usage="Usage: $progname [-c CONFIG_FILE] [-h] [-v]"
 
@@ -126,5 +127,8 @@ fi
 # Copy the logs and a timestamp file to the remote host.
 sleep "${REUSE_INTERVAL:-30}"
 date >"$state_files_base.last-xfer"
+
+# Let RSYNC_OTHER_LOGS be relative to the installation directory.
+cd "$progdir"
 do_rsync -a --partial "$state_files_base.log" "$state_files_base.last-xfer" \
 	$RSYNC_OTHER_LOGS "$USER@$TO"
