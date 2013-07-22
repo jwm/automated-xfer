@@ -170,7 +170,7 @@ case $ROTATE_OTHER_LOGS in
 1|yes|YES|Yes|true|TRUE|True)
 	for log in $RSYNC_OTHER_LOGS; do
 		rotate_if_larger "$log" \
-			"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))" "${KEEP_LOGS:-5}"
+			"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))}" "${KEEP_LOGS:-5}"
 	done
 	other_logs="$log $log.*"
 	;;
