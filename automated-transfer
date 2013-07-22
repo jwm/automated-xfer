@@ -172,7 +172,7 @@ case $ROTATE_OTHER_LOGS in
 		rotate_if_larger "$log" \
 			"${MAX_LOG_SIZE:-$((25 * 1024 * 1024))}" "${KEEP_LOGS:-5}"
 	done
-	other_logs="$log $log.*"
+	other_logs="$log $log.[1-${KEEP_LOGS:-5}]"
 	;;
 *)
 	other_logs=''
@@ -186,5 +186,6 @@ case $ROTATE_OTHER_LOGS in
 	;;
 esac
 
-do_rsync -a --partial "$state_files_base.log" "$state_files_base.log."* \
+do_rsync -a --partial \
+	"$state_files_base.log" "$state_files_base.log."[1-${KEEP_LOGS:-5}] \
 	"$state_files_base.last-xfer" $other_logs "$USER@$TO"
